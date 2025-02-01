@@ -10,12 +10,13 @@
 #include <screens.h>
 #include "functions_time.h"
 #include "images.h"
+#include "keys.h"
 
-const char *ssid = "ssid";
-const char *password = "password";
+const char *ssid = ssidWifi;
+const char *password = passwordWifi;
 
-const String q = "city";
-const String appid = "key";
+const String q = city;
+const String appid = apiKey;
 const String url = "http://api.openweathermap.org/data/2.5/weather?q=" + q + "&units=metric&lang=ru&appid=" + appid;
 
 #define SCREEN_WIDTH 240
