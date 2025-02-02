@@ -590,12 +590,33 @@ void create_screen_page_weather() {
             {
                 lv_obj_t *parent_obj = obj;
                 {
+                    // city_weather
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    objects.city_weather = obj;
+                    lv_obj_set_pos(obj, 5, 12);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_label_set_text(obj, "Город");
+                    lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &ui_font_os_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
+                {
                     // temp_weather
                     lv_obj_t *obj = lv_label_create(parent_obj);
                     objects.temp_weather = obj;
-                    lv_obj_set_pos(obj, 136, 40);
+                    lv_obj_set_pos(obj, 5, 35);
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_label_set_text(obj, "Temp");
+                    lv_label_set_text(obj, "Температура");
+                    lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
+                }
+                {
+                    // feel_temp_weather
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    objects.feel_temp_weather = obj;
+                    lv_obj_set_pos(obj, 5, 56);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_label_set_text(obj, "Ощущается как");
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
@@ -603,9 +624,9 @@ void create_screen_page_weather() {
                     // wind_weather
                     lv_obj_t *obj = lv_label_create(parent_obj);
                     objects.wind_weather = obj;
-                    lv_obj_set_pos(obj, 136, 63);
+                    lv_obj_set_pos(obj, 5, 78);
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_label_set_text(obj, "Wind");
+                    lv_label_set_text(obj, "Ветер");
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
@@ -613,43 +634,33 @@ void create_screen_page_weather() {
                     // hum_weather
                     lv_obj_t *obj = lv_label_create(parent_obj);
                     objects.hum_weather = obj;
-                    lv_obj_set_pos(obj, 137, 87);
+                    lv_obj_set_pos(obj, 5, 99);
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_label_set_text(obj, "Humidity");
+                    lv_label_set_text(obj, "Влажность");
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
                 {
-                    // press_weather
+                    // uv_weather
                     lv_obj_t *obj = lv_label_create(parent_obj);
-                    objects.press_weather = obj;
-                    lv_obj_set_pos(obj, 136, 110);
+                    objects.uv_weather = obj;
+                    lv_obj_set_pos(obj, 5, 121);
                     lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                    lv_label_set_text(obj, "Pressure ");
-                    lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-                }
-                {
-                    // main_weather
-                    lv_obj_t *obj = lv_label_create(parent_obj);
-                    objects.main_weather = obj;
-                    lv_obj_set_pos(obj, 137, 133);
-                    lv_obj_set_size(obj, 160, 37);
-                    lv_label_set_text(obj, "Ясно");
+                    lv_label_set_text(obj, "УФ индекс");
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
                 {
-                    // city_weather
+                    // description_weather
                     lv_obj_t *obj = lv_label_create(parent_obj);
-                    objects.city_weather = obj;
-                    lv_obj_set_pos(obj, 67, 3);
-                    lv_obj_set_size(obj, 172, LV_SIZE_CONTENT);
-                    lv_label_set_text(obj, "City");
+                    objects.description_weather = obj;
+                    lv_obj_set_pos(obj, 5, 142);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_label_set_text(obj, "Описание погоды");
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_obj_set_style_text_font(obj, &ui_font_os_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &ui_font_os_14, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_align(obj, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN | LV_STATE_DEFAULT);
                 }
             }
         }
@@ -683,7 +694,7 @@ extern void add_style(lv_obj_t *obj, int32_t styleIndex);
 extern void remove_style(lv_obj_t *obj, int32_t styleIndex);
 
 static const char *screen_names[] = { "Main", "pageMenu", "pageWeather" };
-static const char *object_names[] = { "main", "page_menu", "page_weather", "obj0", "obj1", "obj2", "obj3", "obj4", "obj5", "obj6", "obj7", "obj8", "menu_time", "menu_date", "obj9", "obj10", "cpu_temp", "cpu_using", "obj11", "obj12", "gpu_temp", "gpu_using", "obj13", "obj14", "ram_used_bar", "ram_used_text", "obj15", "ram_free_bar", "ram_free_text", "obj16", "cpu_power_bar", "cpu_power_text", "obj17", "gpu_power_bar", "gpu_power_text", "obj18", "obj19", "obj20", "weather_time", "weather_date", "obj21", "temp_weather", "wind_weather", "hum_weather", "press_weather", "main_weather", "city_weather" };
+static const char *object_names[] = { "main", "page_menu", "page_weather", "obj0", "obj1", "obj2", "obj3", "obj4", "obj5", "obj6", "obj7", "obj8", "menu_time", "menu_date", "obj9", "obj10", "cpu_temp", "cpu_using", "obj11", "obj12", "gpu_temp", "gpu_using", "obj13", "obj14", "ram_used_bar", "ram_used_text", "obj15", "ram_free_bar", "ram_free_text", "obj16", "cpu_power_bar", "cpu_power_text", "obj17", "gpu_power_bar", "gpu_power_text", "obj18", "obj19", "obj20", "weather_time", "weather_date", "obj21", "city_weather", "temp_weather", "feel_temp_weather", "wind_weather", "hum_weather", "uv_weather", "description_weather" };
 static const char *style_names[] = { "pageTitle" };
 
 void create_screens() {

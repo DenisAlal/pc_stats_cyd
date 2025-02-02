@@ -49,12 +49,13 @@ typedef struct _objects_t {
     lv_obj_t *weather_time;
     lv_obj_t *weather_date;
     lv_obj_t *obj21;
+    lv_obj_t *city_weather;
     lv_obj_t *temp_weather;
+    lv_obj_t *feel_temp_weather;
     lv_obj_t *wind_weather;
     lv_obj_t *hum_weather;
-    lv_obj_t *press_weather;
-    lv_obj_t *main_weather;
-    lv_obj_t *city_weather;
+    lv_obj_t *uv_weather;
+    lv_obj_t *description_weather;
 } objects_t;
 
 extern objects_t objects;

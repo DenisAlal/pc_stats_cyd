@@ -5,7 +5,6 @@
     "selectedStyleObject": "[demo.eez-project]:/lvglStyles/styles/0",
     "selectedThemeObject": "[demo.eez-project]:/themes/0",
     "selectedFontObject": "[demo.eez-project]:/fonts/3",
-    "selectedBitmapObject": "[demo.eez-project]:/bitmaps/1",
     "subnavigationSelectedItems": {
       "variables-tab/sub-navigation/selected-item": "Global"
     }
@@ -1302,16 +1301,14 @@
             "0": {}
           },
           "1": {
-            "4": {
-              "$selected": true
-            }
+            "0": {}
           }
         }
       },
       "transform": {
         "translate": {
           "x": -75.06666666666672,
-          "y": -98.33416666666699
+          "y": 1.665833333333012
         },
         "scale": 1
       },
@@ -1336,9 +1333,10 @@
             "7": {}
           }
         },
-        "2": {
+        "1": {
           "$selected": true
-        }
+        },
+        "2": {}
       },
       "transform": {
         "translate": {

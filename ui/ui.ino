@@ -1,27 +1,30 @@
-#include <Arduino.h>
-#include <lvgl.h>
-#include <TFT_eSPI.h>
-#include <XPT2046_Touchscreen.h>
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-#include <ui.h>
-#include <vars.h>
-#include <screens.h>
 #include "functions_time.h"
 #include "images.h"
 #include "keys.h"
+#include <Arduino.h>
+#include <ArduinoJson.h>
+#include <GyverNTP.h>
+#include <HTTPClient.h>
+#include <TFT_eSPI.h>
+#include <WiFi.h>
+#include <XPT2046_Touchscreen.h>
+#include <lvgl.h>
+#include <screens.h>
+#include <ui.h>
+#include <vars.h>
 
 const char *ssid = ssidWifi;
 const char *password = passwordWifi;
-
 const String q = city;
-const String appid = apiKey;
-const String url = "http://api.openweathermap.org/data/2.5/weather?q=" + q + "&units=metric&lang=ru&appid=" + appid;
+const String apiKey = apiWeatherKey;
+const String url =
+    "http://dataservice.accuweather.com/forecasts/v1/hourly/1hour/" + q +
+    "?apikey=" + apiKey + "&language=ru&details=true&metric=true";
 
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 320
-uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3860, touchScreenMinimumY = 240, touchScreenMaximumY = 3860;
+uint16_t touchScreenMinimumX = 200, touchScreenMaximumX = 3860,
+         touchScreenMinimumY = 240, touchScreenMaximumY = 3860;
 #define DRAW_BUF_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 10 * (LV_COLOR_DEPTH / 8))
 SPIClass touchscreenSpi = SPIClass(VSPI);
 uint8_t *draw_buf;
@@ -53,12 +56,13 @@ struct HardwareInfo
 struct weather_structure
 {
   String city;
-  String main;
-  String icon;
+  String descriprion;
   String temp;
-  String pressure;
+  String perceivedTemp;
+  String uvIndex;
   String humidity;
-  String speed;
+  String wind;
+
 } weather;
 
 void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
@@ -76,8 +80,10 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
     if (p.y > touchScreenMaximumY)
       touchScreenMaximumY = p.y;
     // Map this to the pixel position
-    data->point.x = map(p.x, touchScreenMinimumX, touchScreenMaximumX, 1, TFT_HOR_RES); /* Touchscreen X calibration */
-    data->point.y = map(p.y, touchScreenMinimumY, touchScreenMaximumY, 1, TFT_VER_RES); /* Touchscreen Y calibration */
+    data->point.x = map(p.x, touchScreenMinimumX, touchScreenMaximumX, 1,
+                        TFT_HOR_RES); /* Touchscreen X calibration */
+    data->point.y = map(p.y, touchScreenMinimumY, touchScreenMaximumY, 1,
+                        TFT_VER_RES); /* Touchscreen Y calibration */
     data->state = LV_INDEV_STATE_PRESSED;
   }
   else
@@ -94,19 +100,16 @@ String getSubstring(const char *input, char delimiter)
 
 void hardwareMonitor()
 {
-  WiFiClient client;
-  HTTPClient http;
-  http.useHTTP10(true);
-  http.setTimeout(1500); 
-  http.setConnectTimeout(1000); 
-  http.begin(client, "http://192.168.31.184:8085/data.json");
+  HTTPClient httpMonitor;
+  httpMonitor.setConnectTimeout(1000);
+  httpMonitor.begin("http://192.168.31.184:8085/data.json");
   unsigned long startTime = millis();
-  int httpCode = http.GET();
+  int httpCode = httpMonitor.GET();
   if (httpCode > 0)
   {
     if (httpCode == HTTP_CODE_OK)
     {
-      String payload = http.getString();
+      String payload = httpMonitor.getString();
       const size_t capacity = JSON_OBJECT_SIZE(10) + 4000;
       DynamicJsonDocument doc(capacity);
       DeserializationError error = deserializeJson(doc, payload);
@@ -114,8 +117,8 @@ void hardwareMonitor()
       {
         Serial.print("JSON parsing failed: ");
         Serial.println(error.c_str());
-        http.end();
-        //ledBlink(LED_R, 300);
+        httpMonitor.end();
+        // ledBlink(LED_R, 300);
         return;
       }
 
@@ -123,8 +126,8 @@ void hardwareMonitor()
       if (children.isNull())
       {
         Serial.println("Error: 'Children' is null.");
-        http.end();
-        //ledBlink(LED_R, 300);
+        httpMonitor.end();
+        // ledBlink(LED_R, 300);
         return;
       }
 
@@ -136,8 +139,8 @@ void hardwareMonitor()
           if (components.isNull())
           {
             Serial.println("Error: 'DENIS' has no children.");
-            //ledBlink(LED_R, 300);
-            http.end();
+            // ledBlink(LED_R, 300);
+            httpMonitor.end();
             return;
           }
 
@@ -302,12 +305,16 @@ void hardwareMonitor()
             }
 
             // CPU DATA
-            lv_label_set_text_fmt(objects.cpu_temp, "TEMP %s", hwInfo.cpuTemp.c_str());
-            lv_label_set_text_fmt(objects.cpu_using, "USE %s", hwInfo.cpuLoad.c_str());
+            lv_label_set_text_fmt(objects.cpu_temp, "TEMP %s",
+                                  hwInfo.cpuTemp.c_str());
+            lv_label_set_text_fmt(objects.cpu_using, "USE %s",
+                                  hwInfo.cpuLoad.c_str());
 
             // GPU DATA
-            lv_label_set_text_fmt(objects.gpu_temp, "TEMP %s", hwInfo.gpuTemp.c_str());
-            lv_label_set_text_fmt(objects.gpu_using, "USE %s", hwInfo.gpuLoad.c_str());
+            lv_label_set_text_fmt(objects.gpu_temp, "TEMP %s",
+                                  hwInfo.gpuTemp.c_str());
+            lv_label_set_text_fmt(objects.gpu_using, "USE %s",
+                                  hwInfo.gpuLoad.c_str());
 
             // BARS
             int32_t ru = getPercent(hwInfo.ramUsed.toInt(), 32);
@@ -321,139 +328,92 @@ void hardwareMonitor()
             lv_bar_set_value(objects.gpu_power_bar, gp, LV_ANIM_ON);
 
             // TEXT INSIDE BARS
-            lv_label_set_text_fmt(objects.ram_free_text, "%s", hwInfo.ramFree.c_str());
-            lv_label_set_text_fmt(objects.ram_used_text, "%s", hwInfo.ramUsed.c_str());
-            lv_label_set_text_fmt(objects.cpu_power_text, "%s", hwInfo.cpuPower.c_str());
-            lv_label_set_text_fmt(objects.gpu_power_text, "%s", hwInfo.gpuPower.c_str());
+            lv_label_set_text_fmt(objects.ram_free_text, "%s",
+                                  hwInfo.ramFree.c_str());
+            lv_label_set_text_fmt(objects.ram_used_text, "%s",
+                                  hwInfo.ramUsed.c_str());
+            lv_label_set_text_fmt(objects.cpu_power_text, "%s",
+                                  hwInfo.cpuPower.c_str());
+            lv_label_set_text_fmt(objects.gpu_power_text, "%s",
+                                  hwInfo.gpuPower.c_str());
           }
         }
       }
     }
     else
     {
-      //ledBlink(LED_R, 300);
-      Serial.printf("HTTP request failed, error: %s\n", http.errorToString(httpCode).c_str());
+      // ledBlink(LED_R, 300);
+      Serial.printf("HTTP request failed, error: %s\n",
+                    httpMonitor.errorToString(httpCode).c_str());
     }
   }
   else
   {
-    //ledBlink(LED_R, 300);
-    Serial.printf("HTTP request failed, error: %s\n", http.errorToString(httpCode).c_str());
+    // ledBlink(LED_R, 300);
+    Serial.printf("HTTP request failed, error: %s\n",
+                  httpMonitor.errorToString(httpCode).c_str());
   }
 
-  http.end();
+  httpMonitor.end();
 }
-lv_obj_t *img;
-void update_image(lv_obj_t *parent, const void *src)
-{
 
-  if (img != NULL)
-  {
-    lv_obj_del(img);
-  }
-  img = lv_img_create(objects.page_weather);
-  lv_img_set_src(img, src);
-  lv_obj_set_size(img, 100, 100);
-  lv_obj_set_pos(img, 25, 110);
-  lv_image_set_scale(img, 450);
-  lv_image_set_inner_align(img, LV_IMAGE_ALIGN_CENTER);
-}
 void getWeatherData()
 {
+  HTTPClient httpWeather;
   if (WiFi.status() == WL_CONNECTED)
   {
-    HTTPClient http;
-    http.begin(url);
-    int httpCode = http.GET();
+    Serial.println(url);
+    httpWeather.begin(url);
+    int httpCode = httpWeather.GET();
     if (httpCode > 0)
     {
       // Check for the response
       if (httpCode == HTTP_CODE_OK)
       {
-        String payload = http.getString();
-        const size_t capacity = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(1) + 70;
-        DynamicJsonDocument doc(capacity);
+        String payload = httpWeather.getString();
+        DynamicJsonDocument doc(2048);
         DeserializationError error = deserializeJson(doc, payload);
         if (error)
         {
           Serial.println("Json parsing failed!");
+          httpWeather.end();
+          return;
         }
-        else
-        {
-          JsonArray weatherData = doc["weather"];
-          for (JsonObject item : weatherData)
-          {
-            const char *description = item["description"];
-            const char *icon = item["icon"];
-            weather.main = description;
-            weather.icon = icon;
-          }
 
-          float fTemp = doc["main"]["temp"];
-          int temp = (int)fTemp;
-          int pressure = doc["main"]["pressure"];
-          int humidity = doc["main"]["humidity"];
-          int windSpeed = doc["wind"]["speed"];
-          const char *cityName = doc["name"];
+        float temperature = doc[0]["Temperature"]["Value"];
+        int humidity = doc[0]["RelativeHumidity"];
+        float windSpeed = doc[0]["Wind"]["Speed"]["Value"];
+        const char *descriptionWeather = doc[0]["IconPhrase"];
+        float realFeelTemperature = doc[0]["RealFeelTemperature"]["Value"];
+        int uvIndex = doc[0]["UVIndex"];
+        windSpeed = windSpeed * 1000 / 3600;
+        // Формирование строк для вывода
+        String outputHumidity = "Влажность: " + String(humidity) + "%";
+        String outputTemperature = "Температура: " + String(temperature) + "°C";
+        String outputWind = "Ветер: " + String(windSpeed) + " м/с";
+        String outputIconPhrase = String(descriptionWeather);
+        String outputRealFeel =
+            "Ощущается как: " + String(realFeelTemperature) + "°C";
+        String outputUVIndex = "УФ индекс: " + String(uvIndex);
 
-          weather.temp += "Температура: ";
-          weather.temp += String(temp);
-          weather.temp += "°C";
-          weather.humidity += "Давление: ";
-          weather.humidity += String(pressure);
-          weather.humidity += "гПа";
-          weather.pressure += "Влажность: ";
-          weather.pressure += String(humidity);
-          weather.pressure += "%";
-          weather.speed += "Ветер: ";
-          weather.speed += String(windSpeed);
-          weather.speed += "м/c";
-          weather.city = cityName;
+        weather.descriprion = outputIconPhrase;
+        weather.temp = outputTemperature;
+        weather.perceivedTemp = outputRealFeel;
+        weather.uvIndex = outputUVIndex;
+        weather.humidity = outputHumidity;
+        weather.wind = outputWind;
 
-          lv_label_set_text_fmt(objects.city_weather, "%s", weather.city.c_str());
-          lv_label_set_text_fmt(objects.temp_weather, "%s", weather.temp.c_str());
-          lv_label_set_text_fmt(objects.wind_weather, "%s", weather.speed.c_str());
-          lv_label_set_text_fmt(objects.hum_weather, "%s", weather.humidity.c_str());
-          lv_label_set_text_fmt(objects.press_weather, "%s", weather.pressure.c_str());
-          lv_label_set_text_fmt(objects.main_weather, "%s", weather.main.c_str());
-
-          if (weather.icon == "01d" || weather.icon == "01n")
-          {
-            update_image(objects.page_weather, &img_01d);
-          }
-          else if (weather.icon == "02d" || weather.icon == "02n")
-          {
-            update_image(objects.page_weather, &img_02d);
-          }
-          else if (weather.icon == "03d" || weather.icon == "03n")
-          {
-            update_image(objects.page_weather, &img_03d);
-          }
-          else if (weather.icon == "04d" || weather.icon == "04n")
-          {
-            update_image(objects.page_weather, &img_04d);
-          }
-          else if (weather.icon == "09d" || weather.icon == "09n")
-          {
-            update_image(objects.page_weather, &img_09d);
-          }
-          else if (weather.icon == "10d" || weather.icon == "10n")
-          {
-            update_image(objects.page_weather, &img_10d);
-          }
-          else if (weather.icon == "11d" || weather.icon == "11n")
-          {
-            update_image(objects.page_weather, &img_11d);
-          }
-          else if (weather.icon == "13d" || weather.icon == "13n")
-          {
-            update_image(objects.page_weather, &img_13d);
-          }
-          else if (weather.icon == "50d" || weather.icon == "50n")
-          {
-            update_image(objects.page_weather, &img_50d);
-          }
-        }
+        lv_label_set_text_fmt(objects.city_weather, "%s", weather.city.c_str());
+        lv_label_set_text_fmt(objects.temp_weather, "%s", weather.temp.c_str());
+        lv_label_set_text_fmt(objects.feel_temp_weather, "%s",
+                              weather.perceivedTemp.c_str());
+        lv_label_set_text_fmt(objects.wind_weather, "%s", weather.wind.c_str());
+        lv_label_set_text_fmt(objects.hum_weather, "%s",
+                              weather.humidity.c_str());
+        lv_label_set_text_fmt(objects.uv_weather, "%s",
+                              weather.uvIndex.c_str());
+        lv_label_set_text_fmt(objects.description_weather, "%s",
+                              weather.descriprion.c_str());
       }
       else
       {
@@ -462,10 +422,11 @@ void getWeatherData()
     }
     else
     {
-      //ledBlink(LED_R, 300);
-      Serial.printf("GET request failed, error: %s\n", http.errorToString(httpCode).c_str());
+      // ledBlink(LED_R, 300);
+      Serial.printf("GET request failed, error: %s\n",
+                    httpWeather.errorToString(httpCode).c_str());
     }
-    http.end();
+    httpWeather.end();
   }
   else
   {
@@ -481,7 +442,8 @@ void setup()
   pinMode(LED_R, LOW);
   pinMode(LED_G, LOW);
   pinMode(LED_B, LOW);
-  String LVGL_Arduino = String("LVGL Library Version: ") + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
+  String LVGL_Arduino = String("LVGL Library Version: ") + lv_version_major() +
+                        "." + lv_version_minor() + "." + lv_version_patch();
   Serial.begin(115200);
   Serial.println(LVGL_Arduino);
 
@@ -494,11 +456,9 @@ void setup()
   }
   Serial.print("\nConnected to Wi-Fi network with IP Address: ");
   Serial.println(WiFi.localIP());
-
   touchscreenSpi.begin(25, 39, 32, 36);
   touchscreen.begin(touchscreenSpi);
   touchscreen.setRotation(2);
-
   lv_init();
 
   draw_buf = new uint8_t[DRAW_BUF_SIZE];
@@ -514,8 +474,8 @@ void setup()
   ui_init();
 
   // RTC Update
-  setTime(cvt_date(__DATE__, __TIME__));
-
+  NTP.begin(7);
+  weather.city = "Новосибирск";
   getWeatherData();
 }
 
@@ -539,10 +499,17 @@ void loop()
   lastTick = currentMillis;
 
   // TIME
-  lv_label_set_text_fmt(objects.menu_time, "%02d:%02d:%02d", hour(), minute(), second());
-  lv_label_set_text_fmt(objects.menu_date, "%02d.%02d.%04i", day(), month(), year());
-  lv_label_set_text_fmt(objects.weather_time, "%02d:%02d:%02d", hour(), minute(), second());
-  lv_label_set_text_fmt(objects.weather_date, "%02d.%02d.%04i", day(), month(), year());
+  if (NTP.tick())
+  {
+    Datime dt = NTP;
+    lv_label_set_text_fmt(objects.menu_time, "%02d:%02d", dt.hour, dt.minute);
+    lv_label_set_text_fmt(objects.menu_date, "%02d.%02d.%04i", dt.day, dt.month,
+                          dt.year);
+    lv_label_set_text_fmt(objects.weather_time, "%02d:%02d", dt.hour,
+                          dt.minute);
+    lv_label_set_text_fmt(objects.weather_date, "%02d.%02d.%04i", dt.day,
+                          dt.month, dt.year);
+  }
 
   if (currentMillis - lastRequestTime >= 2000)
   {

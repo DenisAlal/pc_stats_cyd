@@ -4,6 +4,27 @@
         "xstring": "cpp",
         "algorithm": "cpp",
         "ostream": "cpp",
-        "cstddef": "cpp"
-    }
+        "cstddef": "cpp",
+        "array": "cpp",
+        "chrono": "cpp",
+        "deque": "cpp",
+        "format": "cpp",
+        "forward_list": "cpp",
+        "initializer_list": "cpp",
+        "list": "cpp",
+        "regex": "cpp",
+        "vector": "cpp",
+        "xhash": "cpp",
+        "xtree": "cpp",
+        "xutility": "cpp"
+    },
+    "editor.formatOnSave": true,
+    "C_Cpp.formatting": "clangFormat",
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "editor.tabSize": 2,
+    "editor.fontFamily": "Fira Code",
+    "editor.fontLigatures": true,
+    "files.autoSave": "onFocusChange"
 }
